@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>慶典日期大調查</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    .game-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    .card-area {
+      width: 40%;
+      min-width: 300px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .card {
+      background-color: #cccccc;
+      padding: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      user-select: none;
+    }
+    .card.flipped {
+      background-color: #4caf50;
+      color: white;
+    }
+    .card.correct {
+      background-color: #ff9800;
+      color: white;
+      pointer-events: none;
+    }
+    #message {
+      margin-top: 30px;
+      font-size: 20px;
+      color: #333;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #2196f3;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    img#holiday-img {
+      margin-top: 20px;
+      max-width: 200px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 慶典日期大調查</h1>
+  <p>根據節慶圖片，找出對應的月份與日期！</p>
+
+  <img id="holiday-img" src="" alt="節慶圖片" />
+
+  <div class="game-container">
+    <div class="card-area" id="month-area">
+      <h3>月份卡 (1~12)</h3>
+      <div class="card-grid" id="months"></div>
+    </div>
+    <div class="card-area" id="day-area">
+      <h3>日期卡 (1~31)</h3>
+      <div class="card-grid" id="days"></div>
+    </div>
+  </div>
+
+  <div id="message"></div>
+  <button onclick="location.reload()">重新整理更換節慶</button>
+
+  <script>
+    const monthCards = Array.from({ length: 12 }, (_, i) => i + 1);
+    const dayCards = Array.from({ length: 31 }, (_, i) => i + 1);
+
+    const holidays = [
+      {
+        name: "聖誕節",
+        month: 12,
+        day: 25,
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Christmas_tree_icon1.png/240px-Christmas_tree_icon1.png",
+        fact: "紀念耶穌誕生的日子"
+      },
+      {
+        name: "萬聖節",
+        month: 10,
+        day: 31,
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Jack-o%27-Lantern_2003-10-31.jpg/240px-Jack-o%27-Lantern_2003-10-31.jpg",
+        fact: "源自古代驅鬼節慶"
+      },
+      {
+        name: "復活節",
+        month: 4,
+        day: 9,
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Easter_eggs_2009_G1.jpg/240px-Easter_eggs_2009_G1.jpg",
+        fact: "紀念耶穌重生"
+      },
+      {
+        name: "情人節",
+        month: 2,
+        day: 14,
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Valentines_Heart.svg/240px-Valentines_Heart.svg.png",
+        fact: "戀人表達愛意的日子"
+      },
+      {
+        name: "母親節",
+        month: 5,
+        day: 14,
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Mothers-day-icon.png/240px-Mothers-day-icon.png",
+        fact: "向母親致敬的節日"
+      }
+    ];
+
+    const selectedHoliday = holidays[Math.floor(Math.random() * holidays.length)];
+    document.getElementById("holiday-img").src = selectedHoliday.img;
+    let flipped = [];
+    let answered = false;
+
+    function createCards() {
+      const months = document.getElementById("months");
+      const days = document.getElementById("days");
+
+      monthCards.forEach(num => {
+        const card = createCard(num, "month");
+        months.appendChild(card);
+      });
+
+      dayCards.forEach(num => {
+        const card = createCard(num, "day");
+        days.appendChild(card);
+      });
+    }
+
+    function createCard(number, type) {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.dataset.value = number;
+      div.dataset.type = type;
+      div.innerText = "?";
+      div.addEventListener("click", handleCardClick);
+      return div;
+    }
+
+    function handleCardClick(e) {
+      if (answered) return;
+      const card = e.currentTarget;
+      if (card.classList.contains("flipped") || flipped.length >= 2) return;
+
+      card.classList.add("flipped");
+      card.innerText = card.dataset.value;
+      flipped.push(card);
+
+      if (flipped.length === 2) {
+        const [c1, c2] = flipped;
+        if (c1.dataset.type !== c2.dataset.type) {
+          const month = c1.dataset.type === "month" ? parseInt(c1.dataset.value) : parseInt(c2.dataset.value);
+          const day = c1.dataset.type === "day" ? parseInt(c1.dataset.value) : parseInt(c2.dataset.value);
+          if (month === selectedHoliday.month && day === selectedHoliday.day) {
+            c1.classList.add("correct");
+            c2.classList.add("correct");
+            document.getElementById("message").innerText = `✅ ${selectedHoliday.name}：${selectedHoliday.fact}`;
+            answered = true;
+            return;
+          }
+        }
+        // not matched
+        setTimeout(() => {
+          flipped.forEach(c => {
+            c.classList.remove("flipped");
+            c.innerText = "?";
+          });
+          flipped = [];
+        }, 1000);
+      }
+    }
+
+    createCards();
+  </script>
+</body>
+</html>
